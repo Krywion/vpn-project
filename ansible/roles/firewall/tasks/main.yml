@@ -1,0 +1,24 @@
+---
+- name: UFW Configuration
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: "{{ 'udp' if item == openvpn_port else 'tcp' }}"
+  with_items:
+    - "{{ openvpn_port }}"
+    - 22  # SSH
+
+- name: IP Forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: NAT Configuration
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth0
+    jump: MASQUERADE
+    source: "{{ vpn_network }}/24"

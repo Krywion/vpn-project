@@ -6,6 +6,8 @@ resource "aws_instance" "vpn" {
   vpc_security_group_ids      = [aws_security_group.vpn.id]
   associate_public_ip_address = true
 
+  key_name = aws_key_pair.vpn_key.key_name
+
   root_block_device {
     volume_size = 8
     volume_type = "gp2"

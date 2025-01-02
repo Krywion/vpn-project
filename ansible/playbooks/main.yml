@@ -1,0 +1,10 @@
+---
+- name: Install and configure OpenVPN server
+  hosts: vpn_server
+  become: yes
+  vars_files:
+    - ../group_vars/all.yml
+  roles:
+    - ../roles/system_hardening
+    - ../roles/openvpn
+    - ../roles/firewall

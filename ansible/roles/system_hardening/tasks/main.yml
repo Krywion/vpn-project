@@ -1,0 +1,26 @@
+---
+- name: System upgrade
+  apt:
+    update_cache: yes
+    upgrade: full
+    
+- name: Install fail2ban, ufw and unattended-upgrades
+  apt:
+    name:
+      - fail2ban
+      - ufw
+      - unattended-upgrades
+    state: present
+
+- name: Configure fail2ban
+  template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: '0644'
+
+- name: SSH hardening
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    mode: '0600'
+  notify: restart ssh

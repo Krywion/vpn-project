@@ -1,0 +1,117 @@
+---
+- name: OpenVPN installation
+  apt:
+    name: openvpn
+    state: present
+
+- name: OpenVPN configuration directory
+  file:
+    path: /etc/openvpn/keys
+    state: directory
+    mode: '0700'
+
+- name: Download Easy-RSA
+  get_url:
+    url: https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.7/EasyRSA-3.1.7.tgz
+    dest: /etc/openvpn/easy-rsa.tar.gz
+    mode: '0700'
+
+- name: Extract Easy-RSA
+  unarchive:
+    src: /etc/openvpn/easy-rsa.tar.gz
+    dest: /etc/openvpn/
+    remote_src: yes
+
+- name: Rename EasyRSA directory
+  command: mv /etc/openvpn/EasyRSA-3.1.7 /etc/openvpn/easy-rsa
+  args:
+    creates: /etc/openvpn/easy-rsa
+
+- name: Copy vars file
+  command: cp /etc/openvpn/easy-rsa/vars.example /etc/openvpn/easy-rsa/vars
+  args:
+    creates: /etc/openvpn/easy-rsa/vars
+
+- name: Initialize PKI
+  command: ./easyrsa init-pki
+  args:
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki
+
+- name: Build CA
+  command: ./easyrsa --batch build-ca nopass
+  args:
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki/ca.crt
+
+- name: Generate server key
+  command: ./easyrsa --batch build-server-full server nopass
+  args:
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki/issued/server.crt
+
+- name: Generate Diffie-Hellman key
+  command: ./easyrsa gen-dh
+  args:
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki/dh.pem
+
+- name: Copy certificates to OpenVPN directory
+  copy:
+    src: "/etc/openvpn/easy-rsa/pki/{{ item.src }}"
+    dest: "/etc/openvpn/keys/{{ item.dest }}"
+    remote_src: yes
+  with_items:
+    - { src: 'ca.crt', dest: 'ca.crt' }
+    - { src: 'issued/server.crt', dest: 'server.crt' }
+    - { src: 'private/server.key', dest: 'server.key' }
+    - { src: 'dh.pem', dest: 'dh2048.pem' }
+
+- name: OpenVPN Configuration
+  template:
+    src: server.conf.j2
+    dest: /etc/openvpn/server.conf
+    mode: '0644'
+  notify: restart openvpn
+
+- name: Generate client key
+  command: ./easyrsa --batch build-client-full client1 nopass
+  args:
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki/issued/client1.crt
+
+- name: Create temporary directory for certificates
+  local_action:
+    module: file
+    path: "/tmp/openvpn_certs"
+    state: directory
+    mode: '0700'
+  become: no
+  run_once: true
+
+- name: Fetch certificates from remote
+  fetch:
+    src: "{{ item.src }}"
+    dest: "/tmp/openvpn_certs/"
+    flat: yes
+  with_items:
+    - { src: '/etc/openvpn/keys/ca.crt' }
+    - { src: '/etc/openvpn/easy-rsa/pki/issued/client1.crt' }
+    - { src: '/etc/openvpn/easy-rsa/pki/private/client1.key' }
+
+- name: Generate client config
+  local_action:
+    module: template
+    src: client.ovpn.j2
+    dest: "~/client1.ovpn"
+    mode: '0600'
+  become: no
+  run_once: true
+
+- name: Clean up temporary certificates
+  local_action:
+    module: file
+    path: "/tmp/openvpn_certs"
+    state: absent
+  become: no
+  run_once: true

@@ -9,7 +9,7 @@ terraform {
   }
   
   backend "s3" {
-    bucket = "my-terraform-state"
+    bucket = "pl-krywion-tfstate"
     key    = "vpn/terraform.tfstate"
     region = "eu-central-1"
   }
