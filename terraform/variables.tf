@@ -16,13 +16,10 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidrs" {
+variable "subnet_cidrs" {
   description = "CIDR blocks for the public subnets"
-  type        = map(string)
-  default = {
-    "eu-central-1a" = "10.0.1.0/24"
-    "eu-central-1b" = "10.0.2.0/24"
-  }
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
 variable "instance_type" {

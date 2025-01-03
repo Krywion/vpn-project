@@ -72,7 +72,7 @@
     src: server.conf.j2
     dest: /etc/openvpn/server.conf
     mode: '0644'
-  notify: restart openvpn
+  notify: restart openvpn 
 
 - name: Generate client key
   command: ./easyrsa --batch build-client-full client1 nopass
@@ -115,3 +115,9 @@
     state: absent
   become: no
   run_once: true
+
+- name: Ensure OpenVPN is enabled and started
+  service:
+    name: openvpn@server
+    state: started
+    enabled: yes
