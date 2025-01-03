@@ -31,7 +31,7 @@ This project provides an automated solution for deploying and managing personal 
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/vpn-project.git
+git clone https://github.com/krywion/vpn-project.git
 cd vpn-project
 ```
 
