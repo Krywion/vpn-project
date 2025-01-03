@@ -45,6 +45,24 @@ ssh-keygen -t rsa -b 4096 -f ~/.ssh/vpn-key
 aws configure
 ```
 
+### 💰 AWS Costs Disclaimer
+This project uses AWS infrastructure which may incur costs to your AWS account. The main components that generate costs:
+
+* EC2 instance (t2.micro) - around $8-10/month if running 24/7
+* Data transfer costs - varies based on usage:
+  * First 1GB/month is free
+  * $0.09 per GB up to 10TB/month (varies by region)
+  * Inbound data transfer is typically free
+
+To minimize costs:
+
+* Use the --kill command to terminate the server when not in use
+* Consider using AWS Free Tier if eligible (includes 750 hours of t2.micro per month)
+* Monitor your AWS billing dashboard regularly
+* Set up AWS billing alerts
+
+Note: Costs may vary by region and AWS pricing changes over time. Always check current AWS pricing for the most accurate information.
+
 ### 💻 Usage
 The project includes a CLI tool (vpn-connect.py) for managing VPN servers:
 
